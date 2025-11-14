@@ -1,0 +1,76 @@
+/* frontend/static/css/styles.css */
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: #f6f7fb;
+  color: #0f172a;
+  margin: 0;
+  padding: 0;
+  display:flex;
+  height:100vh;
+  align-items:center;
+  justify-content:center;
+}
+
+.app {
+  width: 720px;
+  max-width: 96%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(15,23,42,0.08);
+  padding: 20px;
+}
+
+header h1 { margin:0; font-size:20px; }
+.sub { color:#6b7280; margin-bottom:10px; }
+
+.chat {
+  min-height: 300px;
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid #e6e9ef;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: linear-gradient(180deg,#ffffff, #fbfbff);
+}
+
+.msg {
+  margin-bottom:10px;
+  line-height:1.4;
+  padding:8px;
+  border-radius:8px;
+}
+
+.msg.user { background:#eef2ff; align-self:flex-end; }
+.msg.assistant { background:#f3f4f6; }
+
+.controls {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.controls input[type="text"] {
+  flex:1;
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid #e6e9ef;
+  font-size:14px;
+}
+
+.controls button {
+  padding:10px 12px;
+  border-radius:8px;
+  border: none;
+  cursor:pointer;
+  background:#111827;
+  color:white;
+}
+
+.mic {
+  background: #ef4444;
+  border: none;
+  color:white;
+  padding:8px 12px;
+  border-radius:8px;
+}
