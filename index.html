@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #0d0d0dfb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .chat-container {
+      width: 420px;
+      height: 600px;
+      background: #4c4b4bef;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    .chat-header {
+      padding: 12px 16px;
+      background: #282828;
+      color: #979595;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .messages {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+    }
+    .message {
+      margin: 8px 0;
+      padding: 10px 14px;
+      border-radius: 16px;
+      max-width: 75%;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+    .user {
+      background: #2c2c2d;
+      color: #f1f1f1;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+    .bot {
+      background: #393939;
+      color: #eaeaea;
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-box {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      background: #050505;
+      border-top: 1px solid #0d0d0d;
+    }
+    .chat-box input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #343333;
+      border-radius: 20px;
+      outline: none;
+      background: #1c1c1c;
+      color: #fff;
+    }
+    .chat-box button {
+      border: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .send-btn {
+      background: #1c1d1e;
+      color: #bbb;
+    }
+    .mic-btn {
+      background: #090909;
+      color: #bbb;
+    }
+    .mic-btn.listening {
+      background: red;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">ChatGPT</div>
+    <div class="messages" id="messages"></div>
+    <div class="chat-box">
+      <input type="text" id="message" placeholder="Type your message..." />
+      <button class="send-btn" onclick="sendMessage()">➤</button>
+      <button class="mic-btn" id="micBtn" onclick="startMic()">🎤</button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://127.0.0.1:5000/api/chat";
+    const history = [];
+    let recognition; 
+    let isListening = false;
+
+    function addMessage(text, sender) {
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("message", sender);
+      msgDiv.textContent = text;
+      document.getElementById("messages").appendChild(msgDiv);
+      document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("message");
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      addMessage(msg, "user");
+      history.push({ role: "user", content: msg });
+      input.value = "";
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: msg,
+            history: history
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.reply) {
+          addMessage(data.reply, "bot");
+          history.push({ role: "assistant", content: data.reply });
+        } else {
+          addMessage("⚠️ Error: " + (data.error || "No response"), "bot");
+        }
+      } catch (err) {
+        addMessage("⚠️ Server error: " + err.message, "bot");
+      }
+    }
+
+    // 🎤 Speech-to-text with toggle
+    function startMic() {
+      const micBtn = document.getElementById("micBtn");
+
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        alert("❌ Speech recognition not supported in this browser.");
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!recognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          console.log("Voice input:", transcript);
+          document.getElementById("message").value = transcript;
+          sendMessage();
+        };
+        recognition.onerror = (event) => {
+          console.error("Speech recognition error:", event.error);
+          addMessage("🎤 Error: " + event.error, "bot");
+        };
+        recognition.onend = () => {
+          isListening = false;
+          micBtn.classList.remove("listening");
+          console.log("🎤 Mic stopped");
+        };
+      }
+      if (!isListening) {
+        recognition.start();
+        isListening = true;
+        micBtn.classList.add("listening");
+        console.log("🎤 Listening...");
+      } else {
+        recognition.stop();
+        isListening = false;
+        micBtn.classList.remove("listening");
+        console.log("🎤 Stopped manually");
+      }
+    }
+    // Press Enter to send
+    document.getElementById("message").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
